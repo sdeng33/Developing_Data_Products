@@ -22,26 +22,25 @@ server <- function(input, output, session){
           x <- reactive({horiz_posns <- 
                          seq(from = 0, to = displ_root(), length.out = 10)})
           
+          # This reactive expression is the calculation of the horizontal #
+          # displacement at the time the projectile reaches the maximum height #
+          x_h_max <- reactive({init_vel <- input$v0
+                               X_y_max <- ((init_vel)^2 * sin(rad()))/g})
+          
+          # This reactive expression adds the expression above to create a new #
+          # x-coordinates of the projectile along its horizontal range #
+          x_add <- reactive({x <- c(x()[1:7], x_h_max(), x()[8:10])})
+          
           # This reactive expression are the 5 equidistant y-coordinates along # 
           # its maximum height while ascending and descending. #
           y <- reactive({init_vel <- input$v0
-                         first_term <- tan(rad()) * x()
-                         numerator <- g * (x())^2
+                         first_term <- tan(rad()) * x_add()
+                         numerator <- g * (x_add())^2
                          denominator <- 2 * (init_vel)^2 * (cos(rad()))^2
                          second_term <- numerator/denominator
                          vert_posns <- first_term - second_term
                          vert_posns[length(vert_posns)] <- 0
                          vert_posns})
-          
-          # This reactive expression is the calculation of the horizontal #
-          # displacement at the time the projectile reaches the maximum height #
-          x_h_max <- reactive({init_vel <- input$v0
-                               X_y_max <- ((init_vel)^2 * (sin(rad()))^2)/g})
-
-          # This reactive expression is the calculation of the maximum height  #
-          # of the projectile. #
-          h_max <- reactive({init_vel <- input$v0
-                            y_max <- ((init_vel)^2 * (sin(rad()))^2)/(2 * g)})
           
           # This reactive expression are 10 equally spaced measures of time #
           # from the start to the end. #
@@ -68,15 +67,13 @@ server <- function(input, output, session){
 
           # This reactive expression are the specific number of frames in the #
           # animated plot. #
-          f <- reactive({frame_num <- 1:(length(x()) + 1)})
+          f <- reactive({frame_num <- 1:length(x_add())})
           
           # This reactive expression is a data frame of the trajectory of the #
           # projectile consisting of some of the reactive expressions specified #
           # above. #
-          traj_df <- reactive({df <- data.frame(x = c(x()[1:5], x_h_max(),
-                                                      x()[6:10]),
-                                                y = c(y()[1:5], h_max(),
-                                                      y()[6:10]),
+          traj_df <- reactive({df <- data.frame(x = x_add(),
+                                                y = y(),
                                                 f = f())})
 
           # This reactive expression is a data frame of the speed of the #
@@ -103,9 +100,11 @@ server <- function(input, output, session){
                                                      yaxis = list(title = "y (m)"))
 
                                        fig
+                                       
                                       })
-          # # Render an animated speed plot of the projectile in Plotly with #
-          # # all the necessary formatting. #
+          
+          # Render an animated speed plot of the projectile in Plotly with #
+          # all the necessary formatting. #
           output$spd <- renderPlotly({fig <- spd_df() %>% plot_ly(x = ~x,
                                                                   y = ~y,
                                                                   frame = ~f,
@@ -119,6 +118,7 @@ server <- function(input, output, session){
                                       yaxis = list(title = "speed (m/s)"))
 
                                       fig
+                                      
                                      })
 
           }

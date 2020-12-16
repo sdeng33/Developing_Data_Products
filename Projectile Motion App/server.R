@@ -33,10 +33,25 @@ server <- function(input, output, session){
                          vert_posns[length(vert_posns)] <- 0
                          vert_posns})
           
+          # This reactive expression is the calculation of the horizontal #
+          # displacement at the time the projectile reaches the maximum height #
+          x_h_max <- reactive({init_vel <- input$v0
+                               X_y_max <- ((init_vel)^2 * (sin(rad()))^2)/g})
+
+          # This reactive expression is the calculation of the maximum height  #
+          # of the projectile. #
+          h_max <- reactive({init_vel <- input$v0
+                            y_max <- ((init_vel)^2 * (sin(rad()))^2)/(2 * g)})
+          
           # This reactive expression are 10 equally spaced measures of time #
           # from the start to the end. #
           t <- reactive({T <- seq(from = 0, to = tot_time(), length.out = 10)})
           
+          # This reactive expression is the calculation of the time when the #
+          # speed of the projectile is at a minimum #
+          t_spd_min <- reactive({init_vel <- input$v0
+                                 t_v_min <- (init_vel * sin(rad()))/g})
+
           # This reactive expression are 10 equally spaced measures of speed #
           # including the projectile's initial speed, and the projectile final #
           # speed just before it crashes into the ground. #
@@ -46,24 +61,33 @@ server <- function(input, output, session){
                             v <- sqrt((v_x)^2 + (v_y)^2)
                             })
           
+          # This reactive expression is the calculation of the minimum speed of#
+          # the projectile. #
+          spd_min <- reactive({init_vel <- input$v0
+                               v_min <- init_vel * cos(rad())})
+
           # This reactive expression are the specific number of frames in the #
           # animated plot. #
-          f <- reactive({frame_num <- 1:length(x())})
+          f <- reactive({frame_num <- 1:(length(x()) + 1)})
           
           # This reactive expression is a data frame of the trajectory of the #
           # projectile consisting of some of the reactive expressions specified #
           # above. #
-          traj_df <- reactive({df <- data.frame(x = x(), 
-                                                y = y(),
+          traj_df <- reactive({df <- data.frame(x = c(x()[1:5], x_h_max(),
+                                                      x()[6:10]),
+                                                y = c(y()[1:5], h_max(),
+                                                      y()[6:10]),
                                                 f = f())})
 
           # This reactive expression is a data frame of the speed of the #
           # projectile consisting of some of the reactive expressions specified #
           # above. #
-          spd_df <- reactive({df <- data.frame(x = t(),
-                                               y = speed(),
+          spd_df <- reactive({df <- data.frame(x = c(t()[1:5], t_spd_min(),
+                                                     t()[6:10]),
+                                               y = c(speed()[1:5], spd_min(),
+                                                     speed()[6:10]),
                                                f = f())})
-          
+
           # Render an animated trajectory plot of the projectile in Plotly with #
           # all the necessary formatting. #
           output$traj <- renderPlotly({fig <- traj_df() %>% plot_ly(x = ~x,
@@ -72,29 +96,29 @@ server <- function(input, output, session){
                                                           type = "scatter",
                                                           mode = "markers",
                                                           showlegend = F)
-          
-                                       fig <- fig %>% 
+
+                                       fig <- fig %>%
                                               layout(title = "Trajectory In Vacuum",
                                                      xaxis = list(title = "x (m)"),
                                                      yaxis = list(title = "y (m)"))
-                                       
+
                                        fig
                                       })
-          # Render an animated speed plot of the projectile in Plotly with #
-          # all the necessary formatting. #
+          # # Render an animated speed plot of the projectile in Plotly with #
+          # # all the necessary formatting. #
           output$spd <- renderPlotly({fig <- spd_df() %>% plot_ly(x = ~x,
                                                                   y = ~y,
                                                                   frame = ~f,
                                                                   type = "scatter",
                                                                   mode = "markers",
                                                                   showlegend = F)
-          
-                                      fig <- fig %>% 
+
+                                      fig <- fig %>%
                                       layout(title = "Speed In Vacuum",
                                       xaxis = list(title = "t (s)"),
                                       yaxis = list(title = "speed (m/s)"))
-          
+
                                       fig
                                      })
-          
+
           }

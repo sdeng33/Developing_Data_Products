@@ -1,7 +1,5 @@
 g <- 9.8 # (m/s^2) Acceleration of gravity in SI units #
 
-f_spd <- 1:11 # Specific number of frames in the speed vs time animated plot. #
-
 server <- function(input, output, session){
           
           # This reactive expression converts the degrees inputted by the user #
@@ -27,7 +25,7 @@ server <- function(input, output, session){
           # This reactive expression is the calculation of the horizontal #
           # displacement at the time the projectile reaches the maximum height #
           x_h_max <- reactive({init_vel <- input$v0
-                               X_y_max <- ((init_vel)^2 * sin(rad()))/g})
+                               X_y_max <- ((init_vel)^2 * sin(2 * rad()))/(2 *g)})
           
           # This reactive expression adds the reactive expression above and sorts 
           # to create a new x-coordinates of the projectile along its horizontal 
@@ -61,50 +59,8 @@ server <- function(input, output, session){
            y_alt <- reactive({y_star <- y()
                               bkmrk <- marker()        
                               y_star[bkmrk] <- 0 
-                              y_edit <- y_star })
-          
-           # This reactive expression assess the indices of the vertical #
-           # displacement that are less than zero. #
-          index <- reactive({if (any(y_alt() < 0)){
-                  
-                                ind <- which(y_alt() < 0)
-                                
-                             }
-                             else {
-                                    ind <- 0 
-                                  }
-                             })
-          
-          # This reactive expression removes the indices of the vertical #
-          # displacement that are less than zero from the horizontal 
-          # displacement reactive expression.
-          x_new <- reactive({if (index() != 0){
-                  
-                                        x_novel <- x_add()[-index()]
-                                        
-                                }
-                                else{
-                                        
-                                        x_novel <- x_add()
-                                        
-                                    }
-                             })
-          
-           # This reactive expression removes the indices of the vertical #
-           # displacement that are less than zero from the vertical 
-           # displacement reactive expression.
-           y_new <- reactive({if (index() != 0){
-                   
-                                        y_novel <- y_alt()[-index()]
-                                        
-                                  }                                        
-                                 else{
-                                         
-                                        y_novel <- y_alt()
-                                        
-                                     }
-                             })
-
+                              y_edit <- y_star})
+           
           # This reactive expression are 10 equally spaced measures of time #
           # from the start to the end. #
           t <- reactive({T <- seq(from = 0, to = tot_time(), length.out = 10)})
@@ -130,13 +86,13 @@ server <- function(input, output, session){
 
           # This reactive expression are the specific number of frames in the #
           # trajectory animated plot. #
-          f <- reactive({frame_num <- 1:length(x_new())})
+          f <- reactive({frame_num <- 1:length(x_add())})
           
           # This reactive expression is a data frame of the trajectory of the #
           # projectile consisting of some of the reactive expressions specified #
           # above. #
-          traj_df <- reactive({df <- data.frame(x = x_new(),
-                                                y = y_new(),
+          traj_df <- reactive({df <- data.frame(x = x_add(),
+                                                y = y_alt(),
                                                 f = f())})
 
           # This reactive expression is a data frame of the speed of the #
@@ -146,7 +102,7 @@ server <- function(input, output, session){
                                                      t()[6:10]),
                                                y = c(speed()[1:5], spd_min(),
                                                      speed()[6:10]),
-                                               f = f_spd)})
+                                               f = f())})
 
           # Render an animated trajectory plot of the projectile in Plotly with #
           # all the necessary formatting. #

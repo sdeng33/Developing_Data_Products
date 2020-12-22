@@ -4,7 +4,7 @@ username:
 account: sdeng
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 3410449
-bundleId: 3999436
+appId: 3423550
+bundleId: 4016980
 url: https://sdeng.shinyapps.io/projectile_motion_app/
-when: 1608171164.53028
+when: 1608593765.838
